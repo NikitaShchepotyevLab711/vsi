@@ -11,19 +11,20 @@ module slave_device(
 	input  wire 	   rst_l,
 	input  wire 	   ram_rd_rq,
 	input  wire [15:0] rd_addr,
-	input  wire 	   start,
-	output wire [7:0]  data_o
-
+	output reg  [7:0]  data_o,
+	input  wire 	   new_msg,
+	output reg 		   ready
 );
 
 wire [7:0] data_gen_by_fpga;
+wire [7:0] data_inf;
+wire [7:0] data_ram;
+reg [15:0] data_h;
+wire [8:0] DOut1;
+reg RDB;
+reg [7:0] raddr;
 
 // специальные сигналы FIFO блока //
-wire 	    rst_l_buf;
-wire [7:0]  RADDR = 8'hff;
-wire [7:0]  WADDR = {4'b0000,rst_l_buf,3'b111};
-wire 	    fifo_write_ena;
-wire        fifo_read_ena;
 wire        fifo_read_clk; 
 wire 	    fifo_write_clk;
 
@@ -36,19 +37,48 @@ wire	    empty2;
 wire 	    eqth2;
 wire 	    geqth2;
 
-codegen codegen_inst (
+codegen #(.DATA_WIDTH(8)) codegen_inst (
 	.clk(clk),
 	.rst_l(rst_l),
-	.start(ram_rd_rq),
-	.data(data_o)
+	.data(data_inf),
+	.start(1'b1),
+	.ready(ready_inf)
 );
-/*
+
+always @(posedge clk or negedge rst_l) begin
+	if (!rst_l) 
+		data_h <= '0;
+	else
+		data_h <= (ram_rd_rq && rd_addr == 0) ? data_h + 1 : data_h;
+end
+
+always @(*) begin
+	case (rd_addr)
+		16'h0: begin
+			data_o = data_h[15:8];
+			RDB = 1;
+			raddr = 0;
+		end
+		16'h1: begin
+			data_o = data_h[7:0];
+			RDB = !ram_rd_rq;
+			raddr = rd_addr[7:0]-1;
+		end
+		default: begin
+			RDB = !ram_rd_rq;
+			data_o = data_ram;
+			raddr = rd_addr[7:0]-1;
+		end
+	endcase
+end
+
 xci2_buf buf3 (
 	.a(RDB),
 	.y(RDB_buf)
 );
+
 xci2_buf buf4a (
-	.a(WRB),
+	.a(ready_inf),
 	.y(WRB_buf)
 );
 
@@ -67,33 +97,41 @@ generate
     for (i = 0; i < 8; i = i + 1) begin : data_buf_gen
             xci2_buf buf_inst0 (
                 .a(DOut1[i]),       
-                .y(data_o[i])     
+                .y(data_ram[i])     
             );
     end
 endgenerate
 
-// блок FIFO //
-cell_fifo_4x_swrite_sread fifo0(
-	.DIn   ({1'b0,}		  ),    
-	.RADDR (RADDR		  	  ),    
-	.WADDR (WADDR		  	  ),    
-	.RDB   (!RDB_buf	 	  ),   
-	.WRB   (!WRB_buf		  ),   
-	.RCLKS (fifo_read_clk 	  ),    
-	.WCLKS (fifo_write_clk	  ),    
-	.DC_in0(DC_in0	 	  	  ),    
-	.DC_in1(DC_in1		  	  ),    
-	.DC_in2(1'b0			  ),    
-	.DO1   (data_gen_by_fpga  ), 
-	.DO2   (DOut2			  ),
-	.FULL2 (full2			  ),
-	.EMPTY2(empty2			  ),
-	.EQTH2 (eqth2			  ),
-	.GEQTH2(geqth2		   	  ),
-	.FULL1 (full1			  ),
-	.EMPTY1(empty1			  ),
-	.EQTH1 (eqth1			  ),
-	.GEQTH1(geqth1			  )
+`ifdef DEBUG_MODE
+	psevdo_ram_block ram0 (
+	.DIn({1'b0,data_inf}),
+	.RADDR(raddr),
+	.WADDR(data_inf),
+	.RDB(RDB_buf),
+	.WRB(WRB_buf),
+	.RCLKS(fifo_read_clk),
+	.WCLKS(fifo_write_clk),
+	.DC_in0(0),
+	.DC_in1(0),
+	.DC_in2(0),
+	.DO1(DOut1),
+	.DO2()
+	);
+`else
+ramblock_4x_swrite_sread ramblock_4x_swrite_sread_instance (
+	.DIn({1'b0,data_inf}),
+	.RADDR(raddr),
+	.WADDR(data_inf),
+	.RDB(RDB_buf),
+	.WRB(WRB_buf),
+	.RCLKS(fifo_read_clk),
+	.WCLKS(fifo_write_clk),
+	.DC_in0(0),
+	.DC_in1(0),
+	.DC_in2(0),
+	.DO1(DOut1),
+	.DO2()
 );
-*/
+`endif
+
 endmodule

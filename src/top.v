@@ -1,3 +1,5 @@
+//`define DEBUG_MODE
+
 module top (
     input  wire bb_clk_in,
     input  wire rst_h,
@@ -5,7 +7,7 @@ module top (
     // запрос на запись в память
 //    output wire RX_RAM_REQ_WR,
     // завершение действия по запросу на запись в память
-//   input wire RX_RAM_RDY_WR,
+//    input wire RX_RAM_RDY_WR,
 
     // линия передачи 1
     output wire DATA1,
@@ -29,7 +31,6 @@ wire 	   RX_FLAG_BYTE_NUMBER_RD_EN;
 wire 		RX_RAM_REQ_WR;
 // завершение действия по запросу на запись в память
 wire 		RX_RAM_RDY_WR;
-
 
 // выходная шина адреса
 wire  [15:0]	RX_RAM_ADDR_OUT;
@@ -77,7 +78,7 @@ slave_device slave_device_inst (
     .clk(clk),            
     .rst_l(rst_l),        
     .ram_rd_rq(ram_rd_rq),
-    .rd_addr(rd_addr),      
+    .rd_addr(rd_addr),    
     .data_o(data_o)           
 );
 
@@ -117,7 +118,7 @@ mod_hi_speed_protocol_rx #(
     .CLK_EN_RS_CODER(strobe_1mhz),
     
     .TX_RAM_REQ_RD(ram_rd_rq),
-    .TX_RAM_RDY_RD(ram_rd_rq),
+    .TX_RAM_RDY_RD(1'b1),
     .TX_RAM_ADDR_OUT(rd_addr),
     .TX_RAM_DATA_IN(data_o),
     

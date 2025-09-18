@@ -6,20 +6,32 @@
 //##                                                         
 //###########################################################
 
-module codegen(
+module codegen #(
+	parameter DATA_WIDTH = 8
+) (
 	input  wire clk,
 	input  wire rst_l,
-	input  wire start,
-	output [7:0] data
+	output reg ready,
+	input wire start,
+	output wire [DATA_WIDTH-1:0] data
 );
-
-reg [7:0] increment = 0;
+	
+reg [DATA_WIDTH-1:0] increment;
 
 always @(posedge clk or negedge rst_l) begin
-	if (!rst_l) 
+	if (!rst_l) begin
 		increment <= '0;
-	else if (start) 
-		increment <= increment + 1;
+		ready <= 0;
+	end
+	else begin
+		if (start)
+			if (increment < 8'hff) begin
+				increment <= increment + 1;
+				ready <= 0;
+			end
+			else	
+				ready <= 1;
+	end
 end
 
 assign data = increment;
