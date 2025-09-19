@@ -1,1 +1,1 @@
-create_clock -name bb_clk_in -period 84 -waveform {0 42} -add  bb_clk_in
+create_clock -name bb_clk_in -period 72 -waveform {0 36} -add  bb_clk_in

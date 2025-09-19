@@ -45,31 +45,55 @@ codegen #(.DATA_WIDTH(8)) codegen_inst (
 	.ready(ready_inf)
 );
 
+reg [15:0] rd_addr_reg;
+reg [7:0]  data_o_next;
+reg        RDB_next;
+
+always @(posedge clk or negedge rst_l) begin
+    if (!rst_l) begin
+        rd_addr_reg <= '0;
+        data_o <= '0;
+        RDB <= 1;
+    end else begin
+        rd_addr_reg <= rd_addr;  
+        data_o <= data_o_next;   
+        RDB <= RDB_next;         
+    end
+end
+
+reg [7:0] raddr_reg;
+always @(posedge clk or negedge rst_l) begin
+    if (!rst_l) 
+        raddr_reg <= '0;
+    else
+        raddr_reg <= rd_addr[7:0] - 1;  
+end
+
 always @(posedge clk or negedge rst_l) begin
 	if (!rst_l) 
 		data_h <= '0;
 	else
-		data_h <= (ram_rd_rq && rd_addr == 0) ? data_h + 1 : data_h;
+		data_h <= (ram_rd_rq && rd_addr_reg == 0) ? data_h + 1 : data_h;
 end
 
 always @(*) begin
-	case (rd_addr)
-		16'h0: begin
-			data_o = data_h[15:8];
-			RDB = 1;
-			raddr = 0;
-		end
-		16'h1: begin
-			data_o = data_h[7:0];
-			RDB = !ram_rd_rq;
-			raddr = rd_addr[7:0]-1;
-		end
-		default: begin
-			RDB = !ram_rd_rq;
-			data_o = data_ram;
-			raddr = rd_addr[7:0]-1;
-		end
-	endcase
+    case (rd_addr_reg)  
+        16'h0: begin
+            data_o_next = data_h[15:8];
+            RDB_next = 1;
+			raddr <= 0;
+        end
+        16'h1: begin
+            data_o_next = data_h[7:0];
+            RDB_next = !ram_rd_rq;
+			raddr = raddr_reg;
+        end
+        default: begin
+            data_o_next = data_ram;
+            RDB_next = !ram_rd_rq;
+			raddr = raddr_reg;
+        end
+    endcase
 end
 
 xci2_buf buf3 (
