@@ -13,6 +13,7 @@ vlog "../tb/vsi_suspi.v"\
  "../src/psevdo_ram_block.v"\
  "../src/xci2_buf.v"\
  "../src/rs_coder.v"\
+ "../src/reset_sync.v"\
  "../src/rs_decoder_4.v"
 
 vsim -debugDB -gui work.vsi_suspi

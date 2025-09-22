@@ -49,7 +49,7 @@ reg [15:0] rd_addr_reg;
 reg [7:0]  data_o_next;
 reg        RDB_next;
 
-always @(posedge clk or negedge rst_l) begin
+always @(posedge clk or negedge rst_l) begin : rd_addr_pipeline
     if (!rst_l) begin
         rd_addr_reg <= '0;
         data_o <= '0;
@@ -62,21 +62,21 @@ always @(posedge clk or negedge rst_l) begin
 end
 
 reg [7:0] raddr_reg;
-always @(posedge clk or negedge rst_l) begin
+always @(posedge clk or negedge rst_l) begin :  rd_addr_pipeline_minus1
     if (!rst_l) 
         raddr_reg <= '0;
     else
         raddr_reg <= rd_addr[7:0] - 1;  
 end
 
-always @(posedge clk or negedge rst_l) begin
+always @(posedge clk or negedge rst_l) begin : header_increment
 	if (!rst_l) 
 		data_h <= '0;
 	else
 		data_h <= (ram_rd_rq && rd_addr_reg == 0) ? data_h + 1 : data_h;
 end
 
-always @(*) begin
+always @(*) begin : package_coding
     case (rd_addr_reg)  
         16'h0: begin
             data_o_next = data_h[15:8];

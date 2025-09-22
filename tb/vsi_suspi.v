@@ -121,7 +121,7 @@ initial begin
 
     // Сброс
     #100 rst_h = 1;
-    #140 rst_h = 0;
+    #100 rst_h = 0;
   
 end
 
