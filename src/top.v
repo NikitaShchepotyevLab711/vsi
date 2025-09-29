@@ -1,13 +1,13 @@
-`define DEBUG_MODE
+//`define DEBUG_MODE
 
 module top (
     input  wire bb_clk_in,
     input  wire rst_h,
 
     // запрос на запись в память
-    output wire RX_RAM_REQ_WR,
+//    output wire RX_RAM_REQ_WR,
     // завершение действия по запросу на запись в память
-    input wire RX_RAM_RDY_WR,
+//    input wire RX_RAM_RDY_WR,
 
     // линия передачи 1
     output wire DATA1,
@@ -28,9 +28,9 @@ wire [15:0] RX_BYTE_NUMBER;
 wire 	   RX_FLAG_BYTE_NUMBER_RD_EN;
 
 // запрос на запись в память
-//wire 		RX_RAM_REQ_WR;
+wire 		RX_RAM_REQ_WR;
 // завершение действия по запросу на запись в память
-//wire 		RX_RAM_RDY_WR;
+wire 		RX_RAM_RDY_WR;
 
 // выходная шина адреса
 wire  [15:0]	RX_RAM_ADDR_OUT;
@@ -55,19 +55,19 @@ wire clk = bb_clk_in;
 wire strobe_1mhz;
 wire strobe_4mhz;
 
-wire rst_l; 
+wire rst_l = !rst_h; 
 
 wire [15:0] rd_addr;   
 wire       ram_rd_rq;
 wire       ready;
 wire [7:0] data_o;
-
+/*
 reset_sync rst_sync (
     .rst_n(rst_l),
     .clk(clk),
     .asyncrst_n(!rst_h)
 );
-    
+ */   
 strobe_generator #(.STROBE_PERIOD(12)) strobegen_1mhz (
     .clk(clk),
     .rst_l(rst_l),
@@ -94,7 +94,7 @@ mod_hi_speed_protocol_rx #(
     .MARKER_BYTE_DECODER(8'ha5)
 ) hi_speed_protocol_rx_inst (
     //////////////////////////// ОБЩИЕ
-    .CLK(bb_clk_in),
+    .CLK(clk),
     .RESET(rst_l),
     
     .CODING(CODING),
