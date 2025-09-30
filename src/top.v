@@ -5,9 +5,9 @@ module top (
     input  wire rst_h,
 
     // запрос на запись в память
-//    output wire RX_RAM_REQ_WR,
+ //   output wire RX_RAM_REQ_WR,
     // завершение действия по запросу на запись в память
-//    input wire RX_RAM_RDY_WR,
+ //   input wire RX_RAM_RDY_WR,
 
     // линия передачи 1
     output wire DATA1,
@@ -17,6 +17,8 @@ module top (
     input  wire COM1,
     // линия приема 2
     input  wire COM2
+
+//    output wire data_mem_out
 );
 
 // прием //
@@ -55,20 +57,23 @@ wire clk = bb_clk_in;
 wire strobe_1mhz;
 wire strobe_4mhz;
 
-wire rst_l = !rst_h; 
+wire rst_l = !rst_h;
+wire rst_s;
 
 wire [15:0] rd_addr;   
 wire       ram_rd_rq;
 wire       ready;
 wire [7:0] data_o;
+
+assign data_mem_out = data_o[0];
 /*
-reset_sync rst_sync (
-    .rst_n(rst_l),
-    .clk(clk),
+reset_sync res_sync_inst (
+    .rst_n(rst_s), 
+    .clk(clk), 
     .asyncrst_n(!rst_h)
-);
- */   
-strobe_generator #(.STROBE_PERIOD(12)) strobegen_1mhz (
+);*/
+
+strobe_generator #(.STROBE_PERIOD(2)) strobegen_1mhz (
     .clk(clk),
     .rst_l(rst_l),
     .strobe(strobe_1mhz)

@@ -37,6 +37,8 @@ wire	    empty2;
 wire 	    eqth2;
 wire 	    geqth2;
 
+wire RDB_buf, WRB_buf;
+
 codegen #(.DATA_WIDTH(8)) codegen_inst (
 	.clk(clk),
 	.rst_l(rst_l),

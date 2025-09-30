@@ -20,4 +20,4 @@ vsim -debugDB -gui work.vsi_suspi
 
 do {wave.do}
 
-run 30000us
+run 300us

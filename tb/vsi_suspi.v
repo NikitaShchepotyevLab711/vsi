@@ -33,6 +33,9 @@ top dut (
     .RX_RAM_RDY_WR(RX_RAM_RDY_WR)
 );
 
+wire clk_tx = dut.strobe_1mhz;
+wire clk_rx = dut.strobe_4mhz;
+
 // Генерация тактового сигнала 12 МГц
 always #41.667 bb_clk_in = ~bb_clk_in;
 
@@ -120,8 +123,8 @@ initial begin
     RX_RAM_RDY_WR = 0;
 
     // Сброс
-    #100 rst_h = 1;
-    #100 rst_h = 0;
+    #50 rst_h = 1;
+    #50 rst_h = 0;
   
 end
 
@@ -286,8 +289,6 @@ task receive_status;
     end
 endtask
 
-reg databyte_received = 0;
-
 // Задача приема байта в 11-битном формате
 task receive_11bit_byte;
     reg parity_bit, received_parity;
@@ -295,27 +296,24 @@ task receive_11bit_byte;
     begin
         // Ожидание стартового бита
         wait(DATA1 == 1'b0);
-        @(posedge suspi_clk);
+        @(posedge clk_tx);
         
         // Прием 8 бит данных (младшим битом вперед)
         for (i = 0; i < 8; i = i + 1) begin
-            @(posedge suspi_clk);
+            @(posedge clk_tx);
             rx_byte[i] <= DATA1;
         end
         
         // Прием бита четности
-        @(posedge suspi_clk);
+        @(posedge clk_tx);
         received_parity <= DATA1;
         
         // Прием стопового бита
-        @(posedge suspi_clk);
+        @(posedge clk_tx);
         
         // Проверка четности (можно добавить при необходимости)
         parity_bit = calculate_parity(rx_byte);
         // if (parity_bit != received_parity) $display("Parity error");
-        databyte_received = 1;
-        #1;
-        databyte_received = 0;
     end
 endtask
 
@@ -357,13 +355,5 @@ task receive_data_packet;
         packet_crc_high = rx_byte;
     end
 endtask
-
-// Мониторинг сигналов записи в память
-always @(posedge suspi_clk) begin
-    if (RX_RAM_REQ_WR) begin
-        RX_RAM_RDY_WR <= 1;
-        #20 RX_RAM_RDY_WR <= 0;
-    end
-end
 
 endmodule
